@@ -1,13 +1,8 @@
 package command
 
-type Message struct {
-	Text     string
-	GroupID  int64
-	UserID   int64
-	Nickname string
-}
+import "qqbot/types"
 
-type Command func(msg Message) *APIRequest
+type Command func(msg types.Message) *types.APIRequest
 
 var commands = map[string]Command{}
 
@@ -15,7 +10,7 @@ func Register(name string, cmd Command) {
 	commands[name] = cmd
 }
 
-func Dispatch(msg Message) *APIRequest {
+func Dispatch(msg types.Message) *types.APIRequest {
 	for prefix, cmd := range commands {
 		if len(msg.Text) >= len(prefix) && msg.Text[:len(prefix)] == prefix {
 			return cmd(msg)
@@ -24,8 +19,10 @@ func Dispatch(msg Message) *APIRequest {
 	return nil
 }
 
-type APIRequest struct {
-	Action string      `json:"action"`
-	Params interface{} `json:"params"`
-	Echo   string      `json:"echo,omitempty"`
+func List() []string {
+	names := make([]string, 0, len(commands))
+	for name := range commands {
+		names = append(names, name)
+	}
+	return names
 }

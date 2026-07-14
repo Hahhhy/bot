@@ -1,11 +1,12 @@
 package command
 
 import (
+	"qqbot/types"
 	"testing"
 )
 
 func TestPingCommand(t *testing.T) {
-	msg := Message{
+	msg := types.Message{
 		Text:     "/ping",
 		GroupID:  123456,
 		UserID:   1001,

@@ -6,9 +6,10 @@ import (
 	"strings"
 
 	"qqbot/command"
+	"qqbot/types"
 )
 
-type Event struct {
+type event struct {
 	PostType    string `json:"post_type"`
 	MessageType string `json:"message_type"`
 	GroupID     int64  `json:"group_id"`
@@ -19,27 +20,27 @@ type Event struct {
 	Message json.RawMessage `json:"message"`
 }
 
-func HandleEvent(raw []byte) *command.APIRequest {
-	var event Event
-	if err := json.Unmarshal(raw, &event); err != nil {
+func HandleEvent(raw []byte) *types.APIRequest {
+	var e event
+	if err := json.Unmarshal(raw, &e); err != nil {
 		log.Printf("JSON parse error: %v, raw: %s", err, string(raw))
 		return nil
 	}
 
-	if event.PostType == "message" && event.MessageType == "group" {
+	if e.PostType == "message" && e.MessageType == "group" {
 		log.Printf("Received group message from %s (UID:%d) in group %d",
-			event.Sender.Nickname, event.Sender.UserID, event.GroupID)
+			e.Sender.Nickname, e.Sender.UserID, e.GroupID)
 
-		text := extractText(event.Message)
+		text := ExtractText(e.Message)
 		if text == "" {
 			return nil
 		}
 
-		msg := command.Message{
+		msg := types.Message{
 			Text:     text,
-			GroupID:  event.GroupID,
-			UserID:   event.Sender.UserID,
-			Nickname: event.Sender.Nickname,
+			GroupID:  e.GroupID,
+			UserID:   e.Sender.UserID,
+			Nickname: e.Sender.Nickname,
 		}
 		return command.Dispatch(msg)
 	}
@@ -53,7 +54,7 @@ type messageSegment struct {
 	} `json:"data"`
 }
 
-func extractText(raw json.RawMessage) string {
+func ExtractText(raw json.RawMessage) string {
 	var segments []messageSegment
 	if err := json.Unmarshal(raw, &segments); err != nil {
 		return ""

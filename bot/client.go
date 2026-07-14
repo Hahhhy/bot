@@ -9,7 +9,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func Run(wsURL string) {
+const wsURL = "ws://localhost:3001"
+
+func Run() {
 	log.Printf("Connecting to NapCat at %s...", wsURL)
 
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)

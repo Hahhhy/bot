@@ -1,10 +1,7 @@
 package main
 
-import (
-	"qqbot/bot"
-	"qqbot/config"
-)
+import "qqbot/bot"
 
 func main() {
-	bot.Run(config.WsURL)
+	bot.Run()
 }
