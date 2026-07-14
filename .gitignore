@@ -1,0 +1,22 @@
+# Binaries
+qqbot
+*.exe
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
+
+# NapCat
+guild1.db*
+
+# Superpowers (third-party)
+superpowers/
