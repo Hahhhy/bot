@@ -3,6 +3,9 @@ package bot
 import (
 	"encoding/json"
 	"log"
+	"strings"
+
+	"qqbot/command"
 )
 
 type Event struct {
@@ -16,13 +19,7 @@ type Event struct {
 	Message json.RawMessage `json:"message"`
 }
 
-type APIRequest struct {
-	Action string      `json:"action"`
-	Params interface{} `json:"params"`
-	Echo   string      `json:"echo,omitempty"`
-}
-
-func HandleEvent(raw []byte) *APIRequest {
+func HandleEvent(raw []byte) *command.APIRequest {
 	var event Event
 	if err := json.Unmarshal(raw, &event); err != nil {
 		log.Printf("JSON parse error: %v, raw: %s", err, string(raw))
@@ -33,15 +30,39 @@ func HandleEvent(raw []byte) *APIRequest {
 		log.Printf("Received group message from %s (UID:%d) in group %d",
 			event.Sender.Nickname, event.Sender.UserID, event.GroupID)
 
-		return &APIRequest{
-			Action: "send_group_msg",
-			Params: map[string]interface{}{
-				"group_id": event.GroupID,
-				"message": []map[string]interface{}{
-					{"type": "text", "data": map[string]string{"text": "你好，我上线了！"}},
-				},
-			},
+		text := extractText(event.Message)
+		if text == "" {
+			return nil
 		}
+
+		msg := command.Message{
+			Text:     text,
+			GroupID:  event.GroupID,
+			UserID:   event.Sender.UserID,
+			Nickname: event.Sender.Nickname,
+		}
+		return command.Dispatch(msg)
 	}
 	return nil
+}
+
+type messageSegment struct {
+	Type string `json:"type"`
+	Data struct {
+		Text string `json:"text"`
+	} `json:"data"`
+}
+
+func extractText(raw json.RawMessage) string {
+	var segments []messageSegment
+	if err := json.Unmarshal(raw, &segments); err != nil {
+		return ""
+	}
+	var parts []string
+	for _, seg := range segments {
+		if seg.Type == "text" {
+			parts = append(parts, seg.Data.Text)
+		}
+	}
+	return strings.TrimSpace(strings.Join(parts, ""))
 }
